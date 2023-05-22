@@ -1,0 +1,38 @@
+services:
+  api-gateway:
+    command:
+      ["npm", "run", "dev", "--", "--inspect=0.0.0.0:${API_GATEWAY_DEBUG_PORT}"]
+    ports:
+      - 9200:${API_GATEWAY_DEBUG_PORT}
+    volumes:
+      - ./api-gateway:/app
+  fibonacci:
+    command:
+      ["npm", "run", "dev", "--", "--inspect=0.0.0.0:${FIBONACCI_DEBUG_PORT}"]
+    ports:
+      - 9300:${FIBONACCI_DEBUG_PORT}
+    volumes:
+      - ./fibonacci:/app
+  http-proxy:
+    build:
+      context: ./http-proxy
+      dockerfile: http-proxy.dev.Dockerfile
+    depends_on:
+      - web-app
+    volumes:
+      - ./http-proxy/etc/nginx/conf.d/dev.nginx.conf:/etc/nginx/conf.d/dev.nginx.conf
+  web-app:
+    build:
+      context: ./web-app
+      dockerfile: ../node.prod.Dockerfile
+    command: ["npm", "run", "dev", "--", "-p", "${WEB_APP_PORT}"]
+    container_name: web-app
+    depends_on:
+      - api-gateway
+    networks:
+      - front
+    ports:
+      - 3000:${WEB_APP_PORT}
+    volumes:
+      - ./web-app:/app
+version: "3"

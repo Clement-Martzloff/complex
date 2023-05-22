@@ -1,0 +1,67 @@
+networks:
+  fibonacci-database:
+    driver: bridge
+    name: fibonacci-database
+  fibonacci-service:
+    driver: bridge
+    name: fibonacci-service
+  front:
+    driver: bridge
+    name: front
+services:
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: ../node.prod.Dockerfile
+    command: ["npm", "run", "start"]
+    container_name: api-gateway
+    depends_on:
+      - fibonacci
+    environment:
+      - FIBONACCI_HOST=${FIBONACCI_HOST}
+      - NODE_ENV=${ENVIRONMENT}
+    networks:
+      - fibonacci-service
+      - front
+    ports:
+      - 4000:${API_GATEWAY_PORT}
+  fibonacci:
+    build:
+      context: ./fibonacci
+      dockerfile: ../node.prod.Dockerfile
+    command: ["npm", "run", "start"]
+    container_name: fibonacci
+    depends_on:
+      - fibonacci-database
+    environment:
+      - DATABASE_HOST=${FIBONACCI_DATABASE_HOST}
+      - DATABASE_PORT=${FIBONACCI_DATABASE_PORT}
+      - NODE_ENV=${ENVIRONMENT}
+    networks:
+      - fibonacci-database
+      - fibonacci-service
+    ports:
+      - 4100:${FIBONACCI_PORT}
+  fibonacci-database:
+    image: "bitnami/redis:latest"
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+      - REDIS_PORT_NUMBER=6000
+    container_name: fibonacci-database
+    networks:
+      - fibonacci-database
+    ports:
+      - 6000:${FIBONACCI_DATABASE_PORT}
+  http-proxy:
+    build:
+      context: .
+      dockerfile: http-proxy.prod.Dockerfile
+    command: ["nginx", "-g", "daemon off;"]
+    container_name: http-proxy
+    depends_on:
+      - api-gateway
+    networks:
+      - front
+    ports:
+      - 80:${WEB_PROXY_PORT}
+version: "3"
