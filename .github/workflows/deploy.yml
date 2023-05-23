@@ -2,7 +2,7 @@ name: deployment from github to AWS
 on:
   pull_request:
     branches:
-      - master
+      - main
     types:
       - closed
 jobs:
