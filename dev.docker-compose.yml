@@ -1,16 +1,14 @@
 services:
   api-gateway:
-    command:
-      ["npm", "run", "dev", "--", "--inspect=0.0.0.0:${API_GATEWAY_DEBUG_PORT}"]
+    command: ["npm", "run", "dev", "--", "--inspect=0.0.0.0:9200"]
     ports:
-      - 9200:${API_GATEWAY_DEBUG_PORT}
+      - 9200:9200
     volumes:
       - ./api-gateway:/app
   fibonacci:
-    command:
-      ["npm", "run", "dev", "--", "--inspect=0.0.0.0:${FIBONACCI_DEBUG_PORT}"]
+    command: ["npm", "run", "dev", "--", "--inspect=0.0.0.0:9300"]
     ports:
-      - 9300:${FIBONACCI_DEBUG_PORT}
+      - 9300:9300
     volumes:
       - ./fibonacci:/app
   http-proxy:
@@ -25,14 +23,14 @@ services:
     build:
       context: ./web-app
       dockerfile: ../node.prod.Dockerfile
-    command: ["npm", "run", "dev", "--", "-p", "${WEB_APP_PORT}"]
+    command: ["npm", "run", "dev", "--", "-p", "3000"]
     container_name: web-app
     depends_on:
       - api-gateway
     networks:
       - front
     ports:
-      - 3000:${WEB_APP_PORT}
+      - 3000:3000
     volumes:
       - ./web-app:/app
 version: "3"
